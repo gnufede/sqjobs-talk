@@ -1,0 +1,13 @@
+.reveal code {
+    text-transform: none;
+    color: #A6E22E;
+}
+.reveal h3 code {
+    font: inherit;
+}
+.reveal pre {
+    box-shadow: none;
+}
+body {
+    background: #272822;
+}

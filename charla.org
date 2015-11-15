@@ -1,0 +1,179 @@
+#+TITLE: SQJobs
+#+AUTHOR: Federico Mon
+#+EMAIL: federico.mon@ticketea.com
+#+DATE: 2015-11-21
+#+OPTIONS: num:nil toc:nil todo:nil
+#+REVEAL_ROOT: ./reveal.js/
+# #+REVEAL_ROOT: https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/
+#+REVEAL_EXTRA_CSS: ./custom.css
+#+REVEAL_SLIDE_NUMBER: nil
+#+REVEAL_THEME: league
+#+REVEAL_BACKGROUND: #272822
+
+* History
+** Not so far ago, Celery was used in Ticketea.
+** Some Split-brains happened in RabbitMQ, leading to lot of effort.
+** The goal was to abandon RabbitMQ and use SQS instead
+** For more details you can ask Iñaki or Miguel
+~@igalarzab~ and ~@maraujop~
+
+* Intro
+** Sqjobs is a simple queue jobs system.
+** Jobs are run asynchronously "in background"
+** Jobs can be run even in other machines
+** Because a Queue of jobs is used
+** Broker is the end that creates a Job
+** Worker is the end where the job is consumed
+** The worker is implemented in Python.
+** The broker can be Python or other.
+** The first implemented queue, is SQS.
+* About SQS
+** Job is received at least once.
+** But can be received several times.
+** So Jobs must be idempotent.
+
+* The Job
+** TODO Must be in jobs.py
+** TODO Must exist models.py
+** Sample Job
+#+BEGIN_SRC python
+from sqjobs.job import Job
+
+class DummyJob(Job):
+    name = 'dummy_job'
+    queue = 'dummy_queue'
+ 
+    def run(self, *args, **kwargs):
+        pass
+#+END_SRC
+
+* Launching a Job
+:PROPERTIES:
+   :reveal_background: #272822
+:END:
+** From python
+#+BEGIN_SRC python
+from sqjobs.connectors.dummy import Dummy as DummyConnector
+from sqjobs.brokers.broker import Standard as StandardConnector
+from myapp.jobs import DummyJob
+
+connector = DummyConnector()
+broker = StandardBroker(connector)
+broker.add_job(DummyJob, args, kwargs)
+#+END_SRC
+
+** TODO From anywhere else
+
+* Eager mode
+** Eager mode is a simpler execution mode
+** Tasks are run synchronously
+** By the broker itself
+** So there is no need for a queue nor running workers.
+** Meant for development and unit testing.
+
+* The Worker
+** TODO Workers listen ...
+** Usage:
+#+BEGIN_SRC bash
+$ python manage.py sqjobs worker $queue_name
+#+END_SRC
+
+* A Result-backed Job
+** Status of the job is stored in a database.
+** It uses a Django model, so Django's ORM is used.
+** Can be used, for example, in a web application, to know when the job is done or fails, and act accordingly.
+
+** Sample ResultJob
+#+BEGIN_SRC python
+from sqjobs.contrib.django.djsqjobs.result_job import ResultJob
+
+class DummyResultJob(ResultJob):
+    name = 'dummy_result_job'
+    queue = 'dummy_queue'
+ 
+    def run(self, *args, **kwargs):
+        pass
+#+END_SRC
+
+* A Periodic task
+** Will be executed like if they were in a crontab.
+** This requires another piece of software
+called ~Beater~
+** Cron ranges can be localized to a timezone
+** And support daylight saving changes.
+** Sample PeriodicJob
+#+BEGIN_SRC python
+from djsqjobs import PeriodicJob
+
+class DummyPeriodicJob(PeriodicJob):
+    name = "..."
+    schedule = "1 0 * * *"
+    timezone = "Europe/Madrid"
+    created_on = datetime.today()
+    next_execution = datetime.now() + 10 seconds
+#+END_SRC
+
+* The Beater
+** A special broker that will analyze and queue jobs at the right moment.
+** Usage:
+
+#+BEGIN_SRC bash
+$ python manage.py sqjobs beater $queue_name
+#+END_SRC
+
+* Set up and Tear down
+** Job execution is divided in three different stages:
+~set_up~, ~run~, ~tear_down~
+#+ATTR_REVEAL: :frag appear
+ * Only ~run~ is mandatory
+ * ~set_up~ would be called before run if exists
+ * And ~tear_down~ right after ~run~ if exists.
+
+** Sample Job
+#+BEGIN_SRC python
+from abc import abstractmethod, ABCMeta
+from six import add_metaclass
+
+@add_metaclass(ABCMeta)
+class TimedJob(Job):
+
+    def set_up(self, *args, **kwargs):
+        super(TimedJob, self).set_up(*args, **kwargs)
+        self.start_time = datetime.now()
+
+    def tear_down(self, *args, **kwargs):
+        end_time = datetime.now()
+        delta = end_time - self.start_time
+        logger.log('%s finished in %d seconds' % (self.name, (delta * 1000).seconds))
+        super(TimedJob, self).tear_down(*args, **kwargs)
+
+    @abstractmethod
+    def run(self, *args, **kwargs):
+        raise NotImplementedError
+#+END_SRC
+
+* Failure and Success
+** We can define failure and success methods
+ ~on_success~ and ~on_failure~ methods will be called
+depending on the output of our job execution.
+
+** Example of ~on_success~ and ~on_failure~
+#+BEGIN_SRC python
+from abc import abstractmethod, ABCMeta
+from six import add_metaclass
+
+@add_metaclass(ABCMeta)
+class LoggerJob(Job):
+
+    def on_success(self, *args, **kwargs):
+        logger.log('Successfully finished job %s' % self.name)
+        super(OdinJob, self).on_success(*args, **kwargs)
+
+    def on_failure(self, *args, **kwargs):
+        logger.log('Failed job %s' % self.name)
+        super(OdinJob, self).on_failure(*args, **kwargs)
+
+    @abstractmethod
+    def run(self, *args, **kwargs):
+        raise NotImplementedError
+#+END_SRC
