@@ -10,31 +10,107 @@
 #+REVEAL_THEME: league
 #+REVEAL_BACKGROUND: #272822
 
+
+* Intro
+** Intro to Async Queued Task Execution
+#+NAME:   fig:intro
+[[./img/intro.png]]
+
+** SQJobs implementation
+#+NAME:   fig:sqjobs
+[[./img/sqjobs1.png]]
+# ** Sqjobs is a simple queue jobs system.
+# ** Jobs are run asynchronously "in background"
+# ** Jobs can be run even in other machines
+# ** Because a Queue of jobs is used
+# ** Several ends can create a Job
+# ** Worker is the end where the job is consumed
+# ** The worker is implemented in Python.
+# ** The broker can be Python or other.
+# ** At the moment, the broker is SQS.
+# ** Cheatsheet
+
 * History
-** Not so far ago, Celery was used in Ticketea.
-** Some Split-brains happened in RabbitMQ, leading to lot of effort.
-** The goal was to abandon RabbitMQ and use SQS instead
+** Not so long ago, Celery was used in Ticketea.
+#+NAME:   fig:celery
+[[./img/celery.gif]]
+** Some Split-brains happened in RabbitMQ, leading to lot of effort debugging the situation.
+#+NAME:   fig:splitbrain
+[[./img/splitbrain.gif]]
+# #+NAME:   fig:brain
+# [[./img/brain.gif]]
+*** 
+#+NAME:   fig:issue
+[[./img/maraujop1.png]]
+*** 
+#+NAME:   fig:issue2
+[[./img/maraujop2.png]]
+
+** Migrations to OpenERP were taking >48 hours
+#+NAME:   fig:sleepy
+[[./img/sleepy.gif]]
+
+** The goal was to quit using Celery and RabbitMQ and use something simpler instead
+#+NAME:   fig:rainbow
+[[./img/rainbow.gif]]
+
+
 ** For more details you can ask Iñaki or Miguel
 ~@igalarzab~ and ~@maraujop~
 
-* Intro
-** Sqjobs is a simple queue jobs system.
-** Jobs are run asynchronously "in background"
-** Jobs can be run even in other machines
-** Because a Queue of jobs is used
-** Broker is the end that creates a Job
-** Worker is the end where the job is consumed
-** The worker is implemented in Python.
-** The broker can be Python or other.
-** The first implemented queue, is SQS.
-* About SQS
-** Job is received at least once.
-** But can be received several times.
-** So Jobs must be idempotent.
+* The problem
+** Resilience in a network
+"Resiliency is the ability to provide and maintain an acceptable
+level of service in the face of faults and challenges to normal operation."
+#+NAME:   fig:outage
+[[./img/outage.gif]]
+
+** Possible solutions:
+*** Use an existing solution
+**** Why not RQ (Redis)?
+#+NAME:   fig:confused
+[[./img/confused.gif]]
+*** Create our own solution
+#+NAME:   fig:ourselves
+[[./img/ourselves.gif]]
+#+ATTR_REVEAL: :frag appear
+ * Easier to debug
+ * Choose the broker we want
+ * Scratch your own itch
+
+
+* Crafting the solution
+** Different delivery guarantees
+#+ATTR_REVEAL: :frag appear
+ * Only-once-delivery
+ * At-least-once-delivery
+** If we pick only-once-delivery...
+*** What if messages are dropped?
+# #+NAME:   fig:FAIL
+# [[./img/fail.gif]]
+#+NAME:   fig:messages_dropped
+[[./img/messages_dropped.gif]]
+
+** If we pick at-least-once-delivery...
+*** Then, what if messages are received more than once?
+#+NAME:   fig:double_fail
+[[./img/double_fail.gif]]
+*** Write Idempotent Jobs
+#+NAME:   fig:Idempotence
+[[./img/idem.gif]]
+
+* The success
+** Migration to OpenERP took 6 hours
+#+NAME:   fig:applause
+[[./img/applause.gif]]
+** SQjobs workers are quite fast, and easier to debug than Celery's
+At least for us :)
+#+NAME:   fig:MELOCOTONAZO
+[[./img/melocotonazo.gif]]
 
 * The Job
-** TODO Must be in jobs.py
-** TODO Must exist models.py
+** Must be in ~jobs.py~
+** ~models.py~ must exist
 ** Sample Job
 #+BEGIN_SRC python
 from sqjobs.job import Job
@@ -48,9 +124,6 @@ class DummyJob(Job):
 #+END_SRC
 
 * Launching a Job
-:PROPERTIES:
-   :reveal_background: #272822
-:END:
 ** From python
 #+BEGIN_SRC python
 from sqjobs.connectors.dummy import Dummy as DummyConnector
@@ -62,7 +135,18 @@ broker = StandardBroker(connector)
 broker.add_job(DummyJob, args, kwargs)
 #+END_SRC
 
-** TODO From anywhere else
+** From PHP
+#+BEGIN_SRC php
+$payload = array(
+    'name' => $task_name,
+    'args' => $args,
+    'kwargs' => $kwargs
+);
+$json_payload = json_encode($payload);
+
+$this->_sqs = new AmazonSQS($amazon_config['aws_key'], $amazon_config['aws_secret_key']);
+$result = $this->_sqs->send_message($this->_queue_urls[$queue_name], base64_encode($json_payload));
+#+END_SRC
 
 * Eager mode
 ** Eager mode is a simpler execution mode
@@ -72,17 +156,19 @@ broker.add_job(DummyJob, args, kwargs)
 ** Meant for development and unit testing.
 
 * The Worker
-** TODO Workers listen ...
+** Workers listen in a queue and execute jobs
+** Built as a django command
+** You can launch as many as you want
 ** Usage:
 #+BEGIN_SRC bash
-$ python manage.py sqjobs worker $queue_name
+$ ./manage.py sqjobs worker $queue_name
 #+END_SRC
+** TODO Sample execution
 
 * A Result-backed Job
 ** Status of the job is stored in a database.
 ** It uses a Django model, so Django's ORM is used.
 ** Can be used, for example, in a web application, to know when the job is done or fails, and act accordingly.
-
 ** Sample ResultJob
 #+BEGIN_SRC python
 from sqjobs.contrib.django.djsqjobs.result_job import ResultJob
@@ -94,6 +180,7 @@ class DummyResultJob(ResultJob):
     def run(self, *args, **kwargs):
         pass
 #+END_SRC
+** TODO How to use a resultjob
 
 * A Periodic task
 ** Will be executed like if they were in a crontab.
@@ -114,11 +201,15 @@ class DummyPeriodicJob(PeriodicJob):
 #+END_SRC
 
 * The Beater
-** A special broker that will analyze and queue jobs at the right moment.
+** A special component that queue jobs at the right moment.
+** By waking up every certain time, check what jobs should be queued, and reprogram them.
+** You can launch as many as you need.
+** So if any of them dies, the others will queue your job.
+** They use the django database to synchronise and launch the job only once.
+** Despite your jobs should be idempotent.
 ** Usage:
-
 #+BEGIN_SRC bash
-$ python manage.py sqjobs beater $queue_name
+$ ./manage.py sqjobs beater $queue_name
 #+END_SRC
 
 * Set up and Tear down
@@ -133,6 +224,9 @@ $ python manage.py sqjobs beater $queue_name
 #+BEGIN_SRC python
 from abc import abstractmethod, ABCMeta
 from six import add_metaclass
+import logging
+
+logger = logging.getLogger('timed_job')
 
 @add_metaclass(ABCMeta)
 class TimedJob(Job):
@@ -144,7 +238,7 @@ class TimedJob(Job):
     def tear_down(self, *args, **kwargs):
         end_time = datetime.now()
         delta = end_time - self.start_time
-        logger.log('%s finished in %d seconds' % (self.name, (delta * 1000).seconds))
+        logger.info('%s finished in %d seconds' % (self.name, (delta * 1000).seconds))
         super(TimedJob, self).tear_down(*args, **kwargs)
 
     @abstractmethod
@@ -161,17 +255,20 @@ depending on the output of our job execution.
 #+BEGIN_SRC python
 from abc import abstractmethod, ABCMeta
 from six import add_metaclass
+import logging
+
+logger = logging.getLogger('logger_job')
 
 @add_metaclass(ABCMeta)
 class LoggerJob(Job):
 
     def on_success(self, *args, **kwargs):
         logger.log('Successfully finished job %s' % self.name)
-        super(OdinJob, self).on_success(*args, **kwargs)
+        super(LoggerJob, self).on_success(*args, **kwargs)
 
     def on_failure(self, *args, **kwargs):
         logger.log('Failed job %s' % self.name)
-        super(OdinJob, self).on_failure(*args, **kwargs)
+        super(LoggerJob, self).on_failure(*args, **kwargs)
 
     @abstractmethod
     def run(self, *args, **kwargs):

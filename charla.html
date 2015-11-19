@@ -28,22 +28,90 @@
 <h2>2015-11-21</h2>
 </section>
 
+
 <section>
-<section id="slide-orgheadline5">
-<h2 id="orgheadline5">History</h2>
-<div class="outline-text-2" id="text-orgheadline5">
+<section id="slide-orgheadline3">
+<h2 id="orgheadline3">Intro</h2>
+<div class="outline-text-2" id="text-orgheadline3">
 </div></section>
 <section id="slide-orgheadline1">
-<h3 id="orgheadline1">Not so far ago, Celery was used in Ticketea.</h3>
+<h3 id="orgheadline1">Intro to Async Queued Task Execution</h3>
+
+<div id="orgparagraph1" class="figure">
+<p><img src="./img/intro.png" alt="intro.png" />
+</p>
+</div>
+
 </section>
 <section id="slide-orgheadline2">
-<h3 id="orgheadline2">Some Split-brains happened in RabbitMQ, leading to lot of effort.</h3>
+<h3 id="orgheadline2">SQJobs implementation</h3>
+
+<div id="orgparagraph2" class="figure">
+<p><img src="./img/sqjobs1.png" alt="sqjobs1.png" />
+</p>
+</div>
+
 </section>
-<section id="slide-orgheadline3">
-<h3 id="orgheadline3">The goal was to abandon RabbitMQ and use SQS instead</h3>
 </section>
+<section>
+<section id="slide-orgheadline11">
+<h2 id="orgheadline11">History</h2>
+<div class="outline-text-2" id="text-orgheadline11">
+</div></section>
 <section id="slide-orgheadline4">
-<h3 id="orgheadline4">For more details you can ask Iñaki or Miguel</h3>
+<h3 id="orgheadline4">Not so long ago, Celery was used in Ticketea.</h3>
+
+<div id="orgparagraph3" class="figure">
+<p><img src="./img/celery.gif" alt="celery.gif" />
+</p>
+</div>
+</section>
+<section id="slide-orgheadline7">
+<h3 id="orgheadline7">Some Split-brains happened in RabbitMQ, leading to lot of effort debugging the situation.</h3>
+
+<div id="orgparagraph4" class="figure">
+<p><img src="./img/splitbrain.gif" alt="splitbrain.gif" />
+</p>
+</div>
+</section>
+<section id="slide-orgheadline5">
+<h4 id="orgheadline5"></h4>
+
+<div id="orgparagraph5" class="figure">
+<p><img src="./img/maraujop1.png" alt="maraujop1.png" />
+</p>
+</div>
+</section>
+<section id="slide-orgheadline6">
+<h4 id="orgheadline6"></h4>
+
+<div id="orgparagraph6" class="figure">
+<p><img src="./img/maraujop2.png" alt="maraujop2.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgheadline8">
+<h3 id="orgheadline8">Migrations to OpenERP were taking &gt;48 hours</h3>
+
+<div id="orgparagraph7" class="figure">
+<p><img src="./img/sleepy.gif" alt="sleepy.gif" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgheadline9">
+<h3 id="orgheadline9">The goal was to quit using Celery and RabbitMQ and use something simpler instead</h3>
+
+<div id="orgparagraph8" class="figure">
+<p><img src="./img/rainbow.gif" alt="rainbow.gif" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-orgheadline10">
+<h3 id="orgheadline10">For more details you can ask Iñaki or Miguel</h3>
 <p>
 <code>@igalarzab</code> and <code>@maraujop</code>
 </p>
@@ -51,67 +119,139 @@
 </section>
 </section>
 <section>
-<section id="slide-orgheadline15">
-<h2 id="orgheadline15">Intro</h2>
-<div class="outline-text-2" id="text-orgheadline15">
-</div></section>
-<section id="slide-orgheadline6">
-<h3 id="orgheadline6">Sqjobs is a simple queue jobs system.</h3>
-</section>
-<section id="slide-orgheadline7">
-<h3 id="orgheadline7">Jobs are run asynchronously "in background"</h3>
-</section>
-<section id="slide-orgheadline8">
-<h3 id="orgheadline8">Jobs can be run even in other machines</h3>
-</section>
-<section id="slide-orgheadline9">
-<h3 id="orgheadline9">Because a Queue of jobs is used</h3>
-</section>
-<section id="slide-orgheadline10">
-<h3 id="orgheadline10">Broker is the end that creates a Job</h3>
-</section>
-<section id="slide-orgheadline11">
-<h3 id="orgheadline11">Worker is the end where the job is consumed</h3>
-</section>
-<section id="slide-orgheadline12">
-<h3 id="orgheadline12">The worker is implemented in Python.</h3>
-</section>
-<section id="slide-orgheadline13">
-<h3 id="orgheadline13">The broker can be Python or other.</h3>
-</section>
-<section id="slide-orgheadline14">
-<h3 id="orgheadline14">The first implemented queue, is SQS.</h3>
-</section>
-</section>
-<section>
-<section id="slide-orgheadline19">
-<h2 id="orgheadline19">About SQS</h2>
-<div class="outline-text-2" id="text-orgheadline19">
-</div></section>
-<section id="slide-orgheadline16">
-<h3 id="orgheadline16">Job is received at least once.</h3>
-</section>
 <section id="slide-orgheadline17">
-<h3 id="orgheadline17">But can be received several times.</h3>
+<h2 id="orgheadline17">The problem</h2>
+<div class="outline-text-2" id="text-orgheadline17">
+</div></section>
+<section id="slide-orgheadline12">
+<h3 id="orgheadline12">Resilience in a network</h3>
+<p>
+"Resiliency is the ability to provide and maintain an acceptable
+level of service in the face of faults and challenges to normal operation."
+</p>
+
+<div id="orgparagraph9" class="figure">
+<p><img src="./img/outage.gif" alt="outage.gif" />
+</p>
+</div>
+
 </section>
-<section id="slide-orgheadline18">
-<h3 id="orgheadline18">So Jobs must be idempotent.</h3>
+<section id="slide-orgheadline16">
+<h3 id="orgheadline16">Possible solutions:</h3>
+<div class="outline-text-3" id="text-orgheadline16">
+</div></section>
+<section id="slide-orgheadline14">
+<h4 id="orgheadline14">Use an existing solution</h4>
+<div class="outline-text-4" id="text-orgheadline14">
+</div><ul class="org-ul"><li><a id="orgheadline13"></a>Why not RQ (Redis)?<br  /><div id="orgparagraph10" class="figure">
+<p><img src="./img/confused.gif" alt="confused.gif" />
+</p>
+</div></li></ul>
+</section>
+<section id="slide-orgheadline15">
+<h4 id="orgheadline15">Create our own solution</h4>
+
+<div id="orgparagraph11" class="figure">
+<p><img src="./img/ourselves.gif" alt="ourselves.gif" />
+</p>
+</div>
+<ul class="fragment appear">
+<li>Easier to debug</li>
+<li>Choose the broker we want</li>
+<li>Scratch your own itch</li>
+
+</ul>
+
 
 </section>
 </section>
 <section>
-<section id="slide-orgheadline23">
-<h2 id="orgheadline23">The Job</h2>
-<div class="outline-text-2" id="text-orgheadline23">
+<section id="slide-orgheadline24">
+<h2 id="orgheadline24">Crafting the solution</h2>
+<div class="outline-text-2" id="text-orgheadline24">
 </div></section>
-<section id="slide-orgheadline20">
-<h3 id="orgheadline20">Must be in jobs.py</h3>
+<section id="slide-orgheadline18">
+<h3 id="orgheadline18">Different delivery guarantees</h3>
+<ul class="fragment appear">
+<li>Only-once-delivery</li>
+<li>At-least-once-delivery</li>
+
+</ul>
 </section>
+<section id="slide-orgheadline20">
+<h3 id="orgheadline20">If we pick only-once-delivery&#x2026;</h3>
+<div class="outline-text-3" id="text-orgheadline20">
+</div></section>
+<section id="slide-orgheadline19">
+<h4 id="orgheadline19">What if messages are dropped?</h4>
+
+<div id="orgparagraph12" class="figure">
+<p><img src="./img/messages_dropped.gif" alt="messages_dropped.gif" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgheadline23">
+<h3 id="orgheadline23">If we pick at-least-once-delivery&#x2026;</h3>
+<div class="outline-text-3" id="text-orgheadline23">
+</div></section>
 <section id="slide-orgheadline21">
-<h3 id="orgheadline21">Must exist models.py</h3>
+<h4 id="orgheadline21">Then, what if messages are received more than once?</h4>
+
+<div id="orgparagraph13" class="figure">
+<p><img src="./img/double_fail.gif" alt="double_fail.gif" />
+</p>
+</div>
 </section>
 <section id="slide-orgheadline22">
-<h3 id="orgheadline22">Sample Job</h3>
+<h4 id="orgheadline22">Write Idempotent Jobs</h4>
+
+<div id="orgparagraph14" class="figure">
+<p><img src="./img/idem.gif" alt="idem.gif" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgheadline27">
+<h2 id="orgheadline27">The success</h2>
+<div class="outline-text-2" id="text-orgheadline27">
+</div></section>
+<section id="slide-orgheadline25">
+<h3 id="orgheadline25">Migration to OpenERP took 6 hours</h3>
+
+<div id="orgparagraph15" class="figure">
+<p><img src="./img/applause.gif" alt="applause.gif" />
+</p>
+</div>
+</section>
+<section id="slide-orgheadline26">
+<h3 id="orgheadline26">SQjobs workers are quite fast, and easier to debug than Celery's</h3>
+<p>
+At least for us :)
+</p>
+
+<div id="orgparagraph16" class="figure">
+<p><img src="./img/melocotonazo.gif" alt="melocotonazo.gif" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgheadline31">
+<h2 id="orgheadline31">The Job</h2>
+<div class="outline-text-2" id="text-orgheadline31">
+</div></section>
+<section id="slide-orgheadline28">
+<h3 id="orgheadline28">Must be in <code>jobs.py</code></h3>
+</section>
+<section id="slide-orgheadline29">
+<h3 id="orgheadline29"><code>models.py</code> must exist</h3>
+</section>
+<section id="slide-orgheadline30">
+<h3 id="orgheadline30">Sample Job</h3>
 <div class="org-src-container">
 
 <pre  class="src src-python"><span style="color: #F92672;">from</span> sqjobs.job <span style="color: #F92672;">import</span> Job
@@ -128,11 +268,12 @@
 </section>
 </section>
 <section>
-<section id="slide-orgheadline26" data-background="#272822">
-<h2 id="orgheadline26">Launching a Job</h2>
-</section>
-<section id="slide-orgheadline24">
-<h3 id="orgheadline24">From python</h3>
+<section id="slide-orgheadline34">
+<h2 id="orgheadline34">Launching a Job</h2>
+<div class="outline-text-2" id="text-orgheadline34">
+</div></section>
+<section id="slide-orgheadline32">
+<h3 id="orgheadline32">From python</h3>
 <div class="org-src-container">
 
 <pre  class="src src-python"><span style="color: #F92672;">from</span> sqjobs.connectors.dummy <span style="color: #F92672;">import</span> Dummy <span style="color: #F92672;">as</span> DummyConnector
@@ -146,46 +287,19 @@ broker.add_job<span style="color: #AE81FF;">(</span>DummyJob, args, kwargs<span 
 </div>
 
 </section>
-<section id="slide-orgheadline25">
-<h3 id="orgheadline25">From anywhere else</h3>
-
-</section>
-</section>
-<section>
-<section id="slide-orgheadline32">
-<h2 id="orgheadline32">Eager mode</h2>
-<div class="outline-text-2" id="text-orgheadline32">
-</div></section>
-<section id="slide-orgheadline27">
-<h3 id="orgheadline27">Eager mode is a simpler execution mode</h3>
-</section>
-<section id="slide-orgheadline28">
-<h3 id="orgheadline28">Tasks are run synchronously</h3>
-</section>
-<section id="slide-orgheadline29">
-<h3 id="orgheadline29">By the broker itself</h3>
-</section>
-<section id="slide-orgheadline30">
-<h3 id="orgheadline30">So there is no need for a queue nor running workers.</h3>
-</section>
-<section id="slide-orgheadline31">
-<h3 id="orgheadline31">Meant for development and unit testing.</h3>
-
-</section>
-</section>
-<section>
-<section id="slide-orgheadline35">
-<h2 id="orgheadline35">The Worker</h2>
-<div class="outline-text-2" id="text-orgheadline35">
-</div></section>
 <section id="slide-orgheadline33">
-<h3 id="orgheadline33">Workers listen &#x2026;</h3>
-</section>
-<section id="slide-orgheadline34">
-<h3 id="orgheadline34">Usage:</h3>
+<h3 id="orgheadline33">From PHP</h3>
 <div class="org-src-container">
 
-<pre  class="src src-bash">$ python manage.py sqjobs worker $<span style="color: #FD971F;">queue_name</span>
+<pre  class="src src-php"><span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #FD971F;">payload</span> = <span style="color: #F92672;">array</span><span style="color: #AE81FF;">(</span>
+    <span style="color: #E6DB74;">'name'</span> =&gt; <span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #FD971F;">task_name</span>,
+    <span style="color: #E6DB74;">'args'</span> =&gt; <span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #FD971F;">args</span>,
+    <span style="color: #E6DB74;">'kwargs'</span> =&gt; <span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #FD971F;">kwargs</span>
+<span style="color: #AE81FF;">)</span>;
+<span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #FD971F;">json_payload</span> = json_encode<span style="color: #AE81FF;">(</span><span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #FD971F;">payload</span><span style="color: #AE81FF;">)</span>;
+
+<span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #AE81FF;">this</span>-&gt;<span style="color: #FD971F;">_sqs</span> = <span style="color: #F92672;">new</span> <span style="color: #66D9EF;">AmazonSQS</span><span style="color: #AE81FF;">(</span><span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #FD971F;">amazon_config</span><span style="color: #66D9EF;">[</span><span style="color: #E6DB74;">'aws_key'</span><span style="color: #66D9EF;">]</span>, <span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #FD971F;">amazon_config</span><span style="color: #66D9EF;">[</span><span style="color: #E6DB74;">'aws_secret_key'</span><span style="color: #66D9EF;">]</span><span style="color: #AE81FF;">)</span>;
+<span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #FD971F;">result</span> = <span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #AE81FF;">this</span>-&gt;<span style="color: #FD971F;">_sqs</span>-&gt;<span style="color: #F8F8F2; background-color: #272822;">send_message</span><span style="color: #AE81FF;">(</span><span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #AE81FF;">this</span>-&gt;<span style="color: #FD971F;">_queue_urls</span><span style="color: #66D9EF;">[</span><span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #FD971F;">queue_name</span><span style="color: #66D9EF;">]</span>, base64_encode<span style="color: #66D9EF;">(</span><span style="color: #F8F8F2; background-color: #272822;">$</span><span style="color: #FD971F;">json_payload</span><span style="color: #66D9EF;">)</span><span style="color: #AE81FF;">)</span>;
 </pre>
 </div>
 
@@ -193,21 +307,69 @@ broker.add_job<span style="color: #AE81FF;">(</span>DummyJob, args, kwargs<span 
 </section>
 <section>
 <section id="slide-orgheadline40">
-<h2 id="orgheadline40">A Result-backed Job</h2>
+<h2 id="orgheadline40">Eager mode</h2>
 <div class="outline-text-2" id="text-orgheadline40">
 </div></section>
+<section id="slide-orgheadline35">
+<h3 id="orgheadline35">Eager mode is a simpler execution mode</h3>
+</section>
 <section id="slide-orgheadline36">
-<h3 id="orgheadline36">Status of the job is stored in a database.</h3>
+<h3 id="orgheadline36">Tasks are run synchronously</h3>
 </section>
 <section id="slide-orgheadline37">
-<h3 id="orgheadline37">It uses a Django model, so Django's ORM is used.</h3>
+<h3 id="orgheadline37">By the broker itself</h3>
 </section>
 <section id="slide-orgheadline38">
-<h3 id="orgheadline38">Can be used, for example, in a web application, to know when the job is done or fails, and act accordingly.</h3>
-
+<h3 id="orgheadline38">So there is no need for a queue nor running workers.</h3>
 </section>
 <section id="slide-orgheadline39">
-<h3 id="orgheadline39">Sample ResultJob</h3>
+<h3 id="orgheadline39">Meant for development and unit testing.</h3>
+
+</section>
+</section>
+<section>
+<section id="slide-orgheadline46">
+<h2 id="orgheadline46">The Worker</h2>
+<div class="outline-text-2" id="text-orgheadline46">
+</div></section>
+<section id="slide-orgheadline41">
+<h3 id="orgheadline41">Workers listen in a queue and execute jobs</h3>
+</section>
+<section id="slide-orgheadline42">
+<h3 id="orgheadline42">Built as a django command</h3>
+</section>
+<section id="slide-orgheadline43">
+<h3 id="orgheadline43">You can launch as many as you want</h3>
+</section>
+<section id="slide-orgheadline44">
+<h3 id="orgheadline44">Usage:</h3>
+<div class="org-src-container">
+
+<pre  class="src src-bash">$ ./manage.py sqjobs worker $<span style="color: #FD971F;">queue_name</span>
+</pre>
+</div>
+</section>
+<section id="slide-orgheadline45">
+<h3 id="orgheadline45">Sample execution</h3>
+
+</section>
+</section>
+<section>
+<section id="slide-orgheadline52">
+<h2 id="orgheadline52">A Result-backed Job</h2>
+<div class="outline-text-2" id="text-orgheadline52">
+</div></section>
+<section id="slide-orgheadline47">
+<h3 id="orgheadline47">Status of the job is stored in a database.</h3>
+</section>
+<section id="slide-orgheadline48">
+<h3 id="orgheadline48">It uses a Django model, so Django's ORM is used.</h3>
+</section>
+<section id="slide-orgheadline49">
+<h3 id="orgheadline49">Can be used, for example, in a web application, to know when the job is done or fails, and act accordingly.</h3>
+</section>
+<section id="slide-orgheadline50">
+<h3 id="orgheadline50">Sample ResultJob</h3>
 <div class="org-src-container">
 
 <pre  class="src src-python"><span style="color: #F92672;">from</span> sqjobs.contrib.django.djsqjobs.result_job <span style="color: #F92672;">import</span> ResultJob
@@ -220,31 +382,34 @@ broker.add_job<span style="color: #AE81FF;">(</span>DummyJob, args, kwargs<span 
         <span style="color: #F92672;">pass</span>
 </pre>
 </div>
+</section>
+<section id="slide-orgheadline51">
+<h3 id="orgheadline51">How to use a resultjob</h3>
 
 </section>
 </section>
 <section>
-<section id="slide-orgheadline46">
-<h2 id="orgheadline46">A Periodic task</h2>
-<div class="outline-text-2" id="text-orgheadline46">
+<section id="slide-orgheadline58">
+<h2 id="orgheadline58">A Periodic task</h2>
+<div class="outline-text-2" id="text-orgheadline58">
 </div></section>
-<section id="slide-orgheadline41">
-<h3 id="orgheadline41">Will be executed like if they were in a crontab.</h3>
+<section id="slide-orgheadline53">
+<h3 id="orgheadline53">Will be executed like if they were in a crontab.</h3>
 </section>
-<section id="slide-orgheadline42">
-<h3 id="orgheadline42">This requires another piece of software</h3>
+<section id="slide-orgheadline54">
+<h3 id="orgheadline54">This requires another piece of software</h3>
 <p>
 called <code>Beater</code>
 </p>
 </section>
-<section id="slide-orgheadline43">
-<h3 id="orgheadline43">Cron ranges can be localized to a timezone</h3>
+<section id="slide-orgheadline55">
+<h3 id="orgheadline55">Cron ranges can be localized to a timezone</h3>
 </section>
-<section id="slide-orgheadline44">
-<h3 id="orgheadline44">And support daylight saving changes.</h3>
+<section id="slide-orgheadline56">
+<h3 id="orgheadline56">And support daylight saving changes.</h3>
 </section>
-<section id="slide-orgheadline45">
-<h3 id="orgheadline45">Sample PeriodicJob</h3>
+<section id="slide-orgheadline57">
+<h3 id="orgheadline57">Sample PeriodicJob</h3>
 <div class="org-src-container">
 
 <pre  class="src src-python"><span style="color: #F92672;">from</span> djsqjobs <span style="color: #F92672;">import</span> PeriodicJob
@@ -261,30 +426,45 @@ called <code>Beater</code>
 </section>
 </section>
 <section>
-<section id="slide-orgheadline49">
-<h2 id="orgheadline49">The Beater</h2>
-<div class="outline-text-2" id="text-orgheadline49">
+<section id="slide-orgheadline66">
+<h2 id="orgheadline66">The Beater</h2>
+<div class="outline-text-2" id="text-orgheadline66">
 </div></section>
-<section id="slide-orgheadline47">
-<h3 id="orgheadline47">A special broker that will analyze and queue jobs at the right moment.</h3>
+<section id="slide-orgheadline59">
+<h3 id="orgheadline59">A special component that queue jobs at the right moment.</h3>
 </section>
-<section id="slide-orgheadline48">
-<h3 id="orgheadline48">Usage:</h3>
+<section id="slide-orgheadline60">
+<h3 id="orgheadline60">By waking up every certain time, check what jobs should be queued, and reprogram them.</h3>
+</section>
+<section id="slide-orgheadline61">
+<h3 id="orgheadline61">You can launch as many as you need.</h3>
+</section>
+<section id="slide-orgheadline62">
+<h3 id="orgheadline62">So if any of them dies, the others will queue your job.</h3>
+</section>
+<section id="slide-orgheadline63">
+<h3 id="orgheadline63">They use the django database to synchronise and launch the job only once.</h3>
+</section>
+<section id="slide-orgheadline64">
+<h3 id="orgheadline64">Despite your jobs should be idempotent.</h3>
+</section>
+<section id="slide-orgheadline65">
+<h3 id="orgheadline65">Usage:</h3>
 <div class="org-src-container">
 
-<pre  class="src src-bash">$ python manage.py sqjobs beater $<span style="color: #FD971F;">queue_name</span>
+<pre  class="src src-bash">$ ./manage.py sqjobs beater $<span style="color: #FD971F;">queue_name</span>
 </pre>
 </div>
 
 </section>
 </section>
 <section>
-<section id="slide-orgheadline52">
-<h2 id="orgheadline52">Set up and Tear down</h2>
-<div class="outline-text-2" id="text-orgheadline52">
+<section id="slide-orgheadline69">
+<h2 id="orgheadline69">Set up and Tear down</h2>
+<div class="outline-text-2" id="text-orgheadline69">
 </div></section>
-<section id="slide-orgheadline50">
-<h3 id="orgheadline50">Job execution is divided in three different stages:</h3>
+<section id="slide-orgheadline67">
+<h3 id="orgheadline67">Job execution is divided in three different stages:</h3>
 <p>
 <code>set_up</code>, <code>run</code>, <code>tear_down</code>
 </p>
@@ -296,12 +476,15 @@ called <code>Beater</code>
 </ul>
 
 </section>
-<section id="slide-orgheadline51">
-<h3 id="orgheadline51">Sample Job</h3>
+<section id="slide-orgheadline68">
+<h3 id="orgheadline68">Sample Job</h3>
 <div class="org-src-container">
 
 <pre  class="src src-python"><span style="color: #F92672;">from</span> abc <span style="color: #F92672;">import</span> abstractmethod, ABCMeta
 <span style="color: #F92672;">from</span> six <span style="color: #F92672;">import</span> add_metaclass
+<span style="color: #F92672;">import</span> logging
+
+<span style="color: #FD971F;">logger</span> = logging.getLogger<span style="color: #AE81FF;">(</span><span style="color: #E6DB74;">'timed_job'</span><span style="color: #AE81FF;">)</span>
 
 <span style="color: #66D9EF;">@add_metaclass</span><span style="color: #AE81FF;">(</span>ABCMeta<span style="color: #AE81FF;">)</span>
 <span style="color: #F92672;">class</span> <span style="color: #66D9EF;">TimedJob</span><span style="color: #AE81FF;">(</span>Job<span style="color: #AE81FF;">)</span>:
@@ -313,7 +496,7 @@ called <code>Beater</code>
     <span style="color: #F92672;">def</span> <span style="color: #A6E22E;">tear_down</span><span style="color: #AE81FF;">(</span><span style="color: #F92672;">self</span>, *args, **kwargs<span style="color: #AE81FF;">)</span>:
         <span style="color: #FD971F;">end_time</span> = datetime.now<span style="color: #AE81FF;">()</span>
         <span style="color: #FD971F;">delta</span> = end_time - <span style="color: #F92672;">self</span>.start_time
-        logger.log<span style="color: #AE81FF;">(</span><span style="color: #E6DB74;">'%s finished in %d seconds'</span> % <span style="color: #66D9EF;">(</span><span style="color: #F92672;">self</span>.name, <span style="color: #A6E22E;">(</span>delta * <span style="color: #AE81FF;">1000</span><span style="color: #A6E22E;">)</span>.seconds<span style="color: #66D9EF;">)</span><span style="color: #AE81FF;">)</span>
+        logger.info<span style="color: #AE81FF;">(</span><span style="color: #E6DB74;">'%s finished in %d seconds'</span> % <span style="color: #66D9EF;">(</span><span style="color: #F92672;">self</span>.name, <span style="color: #A6E22E;">(</span>delta * <span style="color: #AE81FF;">1000</span><span style="color: #A6E22E;">)</span>.seconds<span style="color: #66D9EF;">)</span><span style="color: #AE81FF;">)</span>
         <span style="color: #F92672;">super</span><span style="color: #AE81FF;">(</span>TimedJob, <span style="color: #F92672;">self</span><span style="color: #AE81FF;">)</span>.tear_down<span style="color: #AE81FF;">(</span>*args, **kwargs<span style="color: #AE81FF;">)</span>
 
     <span style="color: #66D9EF;">@abstractmethod</span>
@@ -325,35 +508,38 @@ called <code>Beater</code>
 </section>
 </section>
 <section>
-<section id="slide-orgheadline55">
-<h2 id="orgheadline55">Failure and Success</h2>
-<div class="outline-text-2" id="text-orgheadline55">
+<section id="slide-orgheadline72">
+<h2 id="orgheadline72">Failure and Success</h2>
+<div class="outline-text-2" id="text-orgheadline72">
 </div></section>
-<section id="slide-orgheadline53">
-<h3 id="orgheadline53">We can define failure and success methods</h3>
+<section id="slide-orgheadline70">
+<h3 id="orgheadline70">We can define failure and success methods</h3>
 <p>
  <code>on_success</code> and <code>on_failure</code> methods will be called
 depending on the output of our job execution.
 </p>
 
 </section>
-<section id="slide-orgheadline54">
-<h3 id="orgheadline54">Example of <code>on_success</code> and <code>on_failure</code></h3>
+<section id="slide-orgheadline71">
+<h3 id="orgheadline71">Example of <code>on_success</code> and <code>on_failure</code></h3>
 <div class="org-src-container">
 
 <pre  class="src src-python"><span style="color: #F92672;">from</span> abc <span style="color: #F92672;">import</span> abstractmethod, ABCMeta
 <span style="color: #F92672;">from</span> six <span style="color: #F92672;">import</span> add_metaclass
+<span style="color: #F92672;">import</span> logging
+
+<span style="color: #FD971F;">logger</span> = logging.getLogger<span style="color: #AE81FF;">(</span><span style="color: #E6DB74;">'logger_job'</span><span style="color: #AE81FF;">)</span>
 
 <span style="color: #66D9EF;">@add_metaclass</span><span style="color: #AE81FF;">(</span>ABCMeta<span style="color: #AE81FF;">)</span>
 <span style="color: #F92672;">class</span> <span style="color: #66D9EF;">LoggerJob</span><span style="color: #AE81FF;">(</span>Job<span style="color: #AE81FF;">)</span>:
 
     <span style="color: #F92672;">def</span> <span style="color: #A6E22E;">on_success</span><span style="color: #AE81FF;">(</span><span style="color: #F92672;">self</span>, *args, **kwargs<span style="color: #AE81FF;">)</span>:
         logger.log<span style="color: #AE81FF;">(</span><span style="color: #E6DB74;">'Successfully finished job %s'</span> % <span style="color: #F92672;">self</span>.name<span style="color: #AE81FF;">)</span>
-        <span style="color: #F92672;">super</span><span style="color: #AE81FF;">(</span>OdinJob, <span style="color: #F92672;">self</span><span style="color: #AE81FF;">)</span>.on_success<span style="color: #AE81FF;">(</span>*args, **kwargs<span style="color: #AE81FF;">)</span>
+        <span style="color: #F92672;">super</span><span style="color: #AE81FF;">(</span>LoggerJob, <span style="color: #F92672;">self</span><span style="color: #AE81FF;">)</span>.on_success<span style="color: #AE81FF;">(</span>*args, **kwargs<span style="color: #AE81FF;">)</span>
 
     <span style="color: #F92672;">def</span> <span style="color: #A6E22E;">on_failure</span><span style="color: #AE81FF;">(</span><span style="color: #F92672;">self</span>, *args, **kwargs<span style="color: #AE81FF;">)</span>:
         logger.log<span style="color: #AE81FF;">(</span><span style="color: #E6DB74;">'Failed job %s'</span> % <span style="color: #F92672;">self</span>.name<span style="color: #AE81FF;">)</span>
-        <span style="color: #F92672;">super</span><span style="color: #AE81FF;">(</span>OdinJob, <span style="color: #F92672;">self</span><span style="color: #AE81FF;">)</span>.on_failure<span style="color: #AE81FF;">(</span>*args, **kwargs<span style="color: #AE81FF;">)</span>
+        <span style="color: #F92672;">super</span><span style="color: #AE81FF;">(</span>LoggerJob, <span style="color: #F92672;">self</span><span style="color: #AE81FF;">)</span>.on_failure<span style="color: #AE81FF;">(</span>*args, **kwargs<span style="color: #AE81FF;">)</span>
 
     <span style="color: #66D9EF;">@abstractmethod</span>
     <span style="color: #F92672;">def</span> <span style="color: #A6E22E;">run</span><span style="color: #AE81FF;">(</span><span style="color: #F92672;">self</span>, *args, **kwargs<span style="color: #AE81FF;">)</span>:
