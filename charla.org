@@ -34,11 +34,16 @@
 ** Not so long ago, Celery was used in Ticketea.
 #+NAME:   fig:celery
 [[./img/celery.gif]]
+#+BEGIN_NOTES
+  * Usabamos Celery con rabbitmq en modelo activo-activo.
+  * Dos servidores de rabbitmq que en principio funcionan como uno, pero debería
+    ser más tolerante a fallos.
+#+END_NOTES
 ** Some Split-brains happened in RabbitMQ, leading to lot of effort debugging the situation.
-#+NAME:   fig:splitbrain
-[[./img/splitbrain.gif]]
-# #+NAME:   fig:brain
-# [[./img/brain.gif]]
+# #+NAME:   fig:splitbrain
+# [[./img/splitbrain.gif]]
+#+NAME:   fig:brain
+[[./img/brain.gif]]
 *** 
 #+NAME:   fig:issue
 [[./img/maraujop1.png]]
@@ -67,7 +72,7 @@ level of service in the face of faults and challenges to normal operation."
 
 ** Possible solutions:
 *** Use an existing solution
-**** Why not RQ (Redis)?
+ RQ (Redis)
 #+NAME:   fig:confused
 [[./img/confused.gif]]
 *** Create our own solution
@@ -101,8 +106,8 @@ level of service in the face of faults and challenges to normal operation."
 
 * The success
 ** Migration to OpenERP took 6 hours
-#+NAME:   fig:applause
-[[./img/applause.gif]]
+#+NAME:   fig:yes
+[[./img/yes.gif]]
 ** SQjobs workers are quite fast, and easier to debug than Celery's
 At least for us :)
 #+NAME:   fig:MELOCOTONAZO
@@ -115,24 +120,26 @@ At least for us :)
 #+BEGIN_SRC python
 from sqjobs.job import Job
 
-class DummyJob(Job):
-    name = 'dummy_job'
-    queue = 'dummy_queue'
+class AdderJob(Job):
+    name = 'adder_job'
+    queue = 'my_queue'
  
     def run(self, *args, **kwargs):
-        pass
+        return sum(args)
 #+END_SRC
 
 * Launching a Job
 ** From python
 #+BEGIN_SRC python
-from sqjobs.connectors.dummy import Dummy as DummyConnector
-from sqjobs.brokers.broker import Standard as StandardConnector
-from myapp.jobs import DummyJob
+from sqjobs import create_sqs_broker
+from myapp.jobs import AdderJob
 
-connector = DummyConnector()
-broker = StandardBroker(connector)
-broker.add_job(DummyJob, args, kwargs)
+kwargs = {
+    'access_key': settings.SQJOBS_SQS_ACCESS_KEY,
+    'secret_key': settings.SQJOBS_SQS_ACCESS_KEY
+}
+broker = create_sqs_broker(**kwargs)
+broker.add_job(AdderJob, *[1, 2, 3, 4])
 #+END_SRC
 
 ** From PHP
@@ -154,6 +161,17 @@ $result = $this->_sqs->send_message($this->_queue_urls[$queue_name], base64_enco
 ** By the broker itself
 ** So there is no need for a queue nor running workers.
 ** Meant for development and unit testing.
+** Sample execution
+#+BEGIN_SRC python
+>>> from sqjobs import create_eager_broker
+>>> broker = create_eager_broker()
+>>> from jobs import AdderJob
+>>> job_added = broker.add_job(AdderJob, *[1, 2, 3])
+>>> job_added 
+('fdb005d3-276f-4f75-8e8e-c8fcde67043c', AdderJob())
+>>> job_added[1].result
+6
+#+END_SRC
 
 * The Worker
 ** Workers listen in a queue and execute jobs
@@ -163,11 +181,10 @@ $result = $this->_sqs->send_message($this->_queue_urls[$queue_name], base64_enco
 #+BEGIN_SRC bash
 $ ./manage.py sqjobs worker $queue_name
 #+END_SRC
-** TODO Sample execution
 
 * A Result-backed Job
 ** Status of the job is stored in a database.
-** It uses a Django model, so Django's ORM is used.
+** It uses a Django model, Django is needed here.
 ** Can be used, for example, in a web application, to know when the job is done or fails, and act accordingly.
 ** Sample ResultJob
 #+BEGIN_SRC python
@@ -180,7 +197,13 @@ class DummyResultJob(ResultJob):
     def run(self, *args, **kwargs):
         pass
 #+END_SRC
-** TODO How to use a resultjob
+** How to use a resultjob
+#+BEGIN_SRC python
+>>> from sqjobs.contrib.django.djsqjobs.models import JobStatus
+>>> my_job = JobStatus.objects.get(job_id='1234')
+>>> if my_job.status == JobStatus.SUCCESS:
+...     print my_job.result
+#+END_SRC
 
 * A Periodic task
 ** Will be executed like if they were in a crontab.
@@ -193,11 +216,14 @@ called ~Beater~
 from djsqjobs import PeriodicJob
 
 class DummyPeriodicJob(PeriodicJob):
-    name = "..."
+    name = "dummy_periodic_job"
+    queue = "my_queue"
+
     schedule = "1 0 * * *"
     timezone = "Europe/Madrid"
-    created_on = datetime.today()
-    next_execution = datetime.now() + 10 seconds
+
+    def run(self, *args, **kwargs):
+        pass
 #+END_SRC
 
 * The Beater
