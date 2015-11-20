@@ -41,6 +41,14 @@
 <p><img src="./img/intro.png" alt="intro.png" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>A la izquierda, los componentes de software que encolan trabajos.</li>
+<li>En el centro, otro componente se encarga de mantener dos colas de mensajes.</li>
+<li>A la derecha, los workers leen de las colas de mensajes, y ejecutan los trabajos.</li>
+</ul>
+
+</aside>
 
 </section>
 <section id="slide-orgheadline2">
@@ -50,6 +58,16 @@
 <p><img src="./img/sqjobs1.png" alt="sqjobs1.png" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>En SQJobs, los mensajes se pueden encolar con python, o con otros lenguajes usando
+el api de SQS.</li>
+<li>Las colas se almacenan en SQS.</li>
+<li>Los workers están hechos usando Django.</li>
+</ul>
+
+</aside>
+
 
 </section>
 </section>
@@ -67,36 +85,62 @@
 </div>
 <aside class="notes">
 <ul class="org-ul">
-<li>Usabamos Celery con rabbitmq en modelo activo-activo.</li>
-<li>Dos servidores de rabbitmq que en principio funcionan como uno, pero debería
-ser más tolerante a fallos.</li>
+<li>Usabamos modelo activo-activo.</li>
+<li>Dos servidores funcionan como uno, pero más tolerante a fallos.</li>
+<li>Posiblemente no usábamos la configuración idónea de Celery en nuestro caso.</li>
 </ul>
 
 </aside>
 </section>
-<section id="slide-orgheadline7">
-<h3 id="orgheadline7">Some Split-brains happened in RabbitMQ, leading to lot of effort debugging the situation.</h3>
+<section id="slide-orgheadline5">
+<h3 id="orgheadline5">Some Split-brains happened in RabbitMQ, leading to lot of work fixing the situation.</h3>
 
 <div id="orgparagraph4" class="figure">
 <p><img src="./img/brain.gif" alt="brain.gif" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>Split brain, cuando los dos servidores pierden la comunicación
+y tienen información diferente</li>
+<li>Al entrar a depurar Celery, hay reimplementación de módulos
+como "exec"</li>
+</ul>
+
+</aside>
 </section>
-<section id="slide-orgheadline5">
-<h4 id="orgheadline5"></h4>
+<section id="slide-orgheadline6">
+<h3 id="orgheadline6">Workers go on strike</h3>
 
 <div id="orgparagraph5" class="figure">
 <p><img src="./img/maraujop1.png" alt="maraujop1.png" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>Bug report de Miguel</li>
+<li>Vemos como los workers dejan de ejecutar tareas.</li>
+<li>En la gráfica no se ve, pero llega un flujo
+constante de trabajos.</li>
+</ul>
+
+</aside>
 </section>
-<section id="slide-orgheadline6">
-<h4 id="orgheadline6"></h4>
+<section id="slide-orgheadline7">
+<h3 id="orgheadline7"></h3>
 
 <div id="orgparagraph6" class="figure">
 <p><img src="./img/maraujop2.png" alt="maraujop2.png" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>Registramos errores de Timeouts de celery</li>
+<li>Al intentar depurar encontramos reimplementación de
+módulos como process, etc. Complicando mucho el trabajo.</li>
+</ul>
+
+</aside>
 
 </section>
 <section id="slide-orgheadline8">
@@ -106,6 +150,13 @@ ser más tolerante a fallos.</li>
 <p><img src="./img/sleepy.gif" alt="sleepy.gif" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>Y no terminaba bien.</li>
+</ul>
+
+</aside>
+
 
 </section>
 <section id="slide-orgheadline9">
@@ -115,6 +166,13 @@ ser más tolerante a fallos.</li>
 <p><img src="./img/rainbow.gif" alt="rainbow.gif" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>Había que cambiar la situación.</li>
+<li>No parecía que la cosa pudiera ir mucho peor.</li>
+</ul>
+
+</aside>
 
 
 </section>
@@ -142,6 +200,14 @@ level of service in the face of faults and challenges to normal operation."
 <p><img src="./img/outage.gif" alt="outage.gif" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>Resistencia en la red.</li>
+<li>Como se comporta el sistema en situacion de estres</li>
+</ul>
+
+</aside>
+
 
 </section>
 <section id="slide-orgheadline15">
@@ -158,6 +224,15 @@ RQ (Redis)
 <p><img src="./img/confused.gif" alt="confused.gif" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>Celery no es la única opción</li>
+<li>Ninguna razón real para no haber probado RQ</li>
+<li>Posibilidad de que ocurriese lo mismo, perder mensajes.</li>
+</ul>
+
+</aside>
+
 </section>
 <section id="slide-orgheadline14">
 <h4 id="orgheadline14">Create our own solution</h4>
@@ -172,7 +247,14 @@ RQ (Redis)
 <li>Scratch your own itch</li>
 
 </ul>
+<aside class="notes">
+<ul class="org-ul">
+<li>Queríamos probar SQS</li>
+<li>Ningún problema para depurar</li>
+<li>Aprender en el camino</li>
+</ul>
 
+</aside>
 
 </section>
 </section>
@@ -188,6 +270,14 @@ RQ (Redis)
 <li>At-least-once-delivery</li>
 
 </ul>
+<aside class="notes">
+<ul class="org-ul">
+<li>Los brokers de mensajes ofrecen garantias de entrega.</li>
+<li>Exactamente una entrega, o al menos una entrega</li>
+</ul>
+
+</aside>
+
 </section>
 <section id="slide-orgheadline19">
 <h3 id="orgheadline19">If we pick only-once-delivery&#x2026;</h3>
@@ -200,6 +290,12 @@ RQ (Redis)
 <p><img src="./img/messages_dropped.gif" alt="messages_dropped.gif" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>Si sólo nos lo entregan una vez y se pierde, adios</li>
+</ul>
+
+</aside>
 
 </section>
 <section id="slide-orgheadline22">
@@ -213,6 +309,14 @@ RQ (Redis)
 <p><img src="./img/double_fail.gif" alt="double_fail.gif" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>Si aplicamos varias veces la misma operación,
+el resultado puede ser diferente de lo planeado</li>
+</ul>
+
+</aside>
+
 </section>
 <section id="slide-orgheadline21">
 <h4 id="orgheadline21">Write Idempotent Jobs</h4>
@@ -221,6 +325,14 @@ RQ (Redis)
 <p><img src="./img/idem.gif" alt="idem.gif" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>Escribiendo los trabajos de tal forma, que no
+afecte aplicarlos 1 vez o N veces.</li>
+<li>Básicamente, si el estado está en el mensaje.</li>
+</ul>
+
+</aside>
 
 </section>
 </section>
@@ -236,6 +348,13 @@ RQ (Redis)
 <p><img src="./img/yes.gif" alt="yes.gif" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>Y esta vez, sí terminó correctamente.</li>
+</ul>
+
+</aside>
+
 </section>
 <section id="slide-orgheadline25">
 <h3 id="orgheadline25">SQjobs workers are quite fast, and easier to debug than Celery's</h3>
@@ -247,6 +366,14 @@ At least for us :)
 <p><img src="./img/melocotonazo.gif" alt="melocotonazo.gif" />
 </p>
 </div>
+<aside class="notes">
+<ul class="org-ul">
+<li>La infraestructura es muy simple,
+añade muy poco overhead.</li>
+</ul>
+
+</aside>
+
 
 </section>
 </section>
@@ -319,27 +446,51 @@ broker.add_job<span style="color: #AE81FF;">(</span>AdderJob, *<span style="colo
 </section>
 </section>
 <section>
-<section id="slide-orgheadline40">
-<h2 id="orgheadline40">Eager mode</h2>
-<div class="outline-text-2" id="text-orgheadline40">
+<section id="slide-orgheadline38">
+<h2 id="orgheadline38">The Worker</h2>
+<div class="outline-text-2" id="text-orgheadline38">
 </div></section>
 <section id="slide-orgheadline34">
-<h3 id="orgheadline34">Eager mode is a simpler execution mode</h3>
+<h3 id="orgheadline34">Workers listen in a queue and execute jobs</h3>
 </section>
 <section id="slide-orgheadline35">
-<h3 id="orgheadline35">Tasks are run synchronously</h3>
+<h3 id="orgheadline35">Built as a django command</h3>
 </section>
 <section id="slide-orgheadline36">
-<h3 id="orgheadline36">By the broker itself</h3>
+<h3 id="orgheadline36">You can launch as many as you want</h3>
 </section>
 <section id="slide-orgheadline37">
-<h3 id="orgheadline37">So there is no need for a queue nor running workers.</h3>
+<h3 id="orgheadline37">Usage:</h3>
+<div class="org-src-container">
+
+<pre  class="src src-bash">$ ./manage.py sqjobs worker $<span style="color: #FD971F;">queue_name</span>
+</pre>
+</div>
+
 </section>
-<section id="slide-orgheadline38">
-<h3 id="orgheadline38">Meant for development and unit testing.</h3>
 </section>
+<section>
+<section id="slide-orgheadline45">
+<h2 id="orgheadline45">Eager mode</h2>
+<div class="outline-text-2" id="text-orgheadline45">
+</div></section>
 <section id="slide-orgheadline39">
-<h3 id="orgheadline39">Sample execution</h3>
+<h3 id="orgheadline39">Eager mode is a simpler execution mode</h3>
+</section>
+<section id="slide-orgheadline40">
+<h3 id="orgheadline40">Tasks are run synchronously</h3>
+</section>
+<section id="slide-orgheadline41">
+<h3 id="orgheadline41">Instead of sending them to the message broker</h3>
+</section>
+<section id="slide-orgheadline42">
+<h3 id="orgheadline42">So there is no need for a queue nor running workers.</h3>
+</section>
+<section id="slide-orgheadline43">
+<h3 id="orgheadline43">Meant for development and unit testing.</h3>
+</section>
+<section id="slide-orgheadline44">
+<h3 id="orgheadline44">Sample execution</h3>
 <div class="org-src-container">
 
 <pre  class="src src-python">&gt;&gt;&gt; <span style="color: #F92672;">from</span> sqjobs <span style="color: #F92672;">import</span> create_eager_broker
@@ -350,30 +501,6 @@ broker.add_job<span style="color: #AE81FF;">(</span>AdderJob, *<span style="colo
 <span style="color: #AE81FF;">(</span><span style="color: #E6DB74;">'fdb005d3-276f-4f75-8e8e-c8fcde67043c'</span>, AdderJob<span style="color: #66D9EF;">()</span><span style="color: #AE81FF;">)</span>
 &gt;&gt;&gt; job_added<span style="color: #AE81FF;">[</span><span style="color: #AE81FF;">1</span><span style="color: #AE81FF;">]</span>.result
 <span style="color: #AE81FF;">6</span>
-</pre>
-</div>
-
-</section>
-</section>
-<section>
-<section id="slide-orgheadline45">
-<h2 id="orgheadline45">The Worker</h2>
-<div class="outline-text-2" id="text-orgheadline45">
-</div></section>
-<section id="slide-orgheadline41">
-<h3 id="orgheadline41">Workers listen in a queue and execute jobs</h3>
-</section>
-<section id="slide-orgheadline42">
-<h3 id="orgheadline42">Built as a django command</h3>
-</section>
-<section id="slide-orgheadline43">
-<h3 id="orgheadline43">You can launch as many as you want</h3>
-</section>
-<section id="slide-orgheadline44">
-<h3 id="orgheadline44">Usage:</h3>
-<div class="org-src-container">
-
-<pre  class="src src-bash">$ ./manage.py sqjobs worker $<span style="color: #FD971F;">queue_name</span>
 </pre>
 </div>
 
@@ -407,6 +534,7 @@ broker.add_job<span style="color: #AE81FF;">(</span>AdderJob, *<span style="colo
         <span style="color: #F92672;">pass</span>
 </pre>
 </div>
+
 </section>
 <section id="slide-orgheadline50">
 <h3 id="orgheadline50">How to use a resultjob</h3>

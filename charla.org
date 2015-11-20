@@ -15,10 +15,22 @@
 ** Intro to Async Queued Task Execution
 #+NAME:   fig:intro
 [[./img/intro.png]]
+#+BEGIN_NOTES
+  * A la izquierda, los componentes de software que encolan trabajos.
+  * En el centro, otro componente se encarga de mantener dos colas de mensajes.
+  * A la derecha, los workers leen de las colas de mensajes, y ejecutan los trabajos.
+#+END_NOTES
 
 ** SQJobs implementation
 #+NAME:   fig:sqjobs
 [[./img/sqjobs1.png]]
+#+BEGIN_NOTES
+  * En SQJobs, los mensajes se pueden encolar con python, o con otros lenguajes usando
+    el api de SQS.
+  * Las colas se almacenan en SQS.
+  * Los workers están hechos usando Django.
+#+END_NOTES
+
 # ** Sqjobs is a simple queue jobs system.
 # ** Jobs are run asynchronously "in background"
 # ** Jobs can be run even in other machines
@@ -35,29 +47,54 @@
 #+NAME:   fig:celery
 [[./img/celery.gif]]
 #+BEGIN_NOTES
-  * Usabamos Celery con rabbitmq en modelo activo-activo.
-  * Dos servidores de rabbitmq que en principio funcionan como uno, pero debería
-    ser más tolerante a fallos.
+  * Usabamos modelo activo-activo.
+  * Dos servidores funcionan como uno, pero más tolerante a fallos.
+  * Posiblemente no usábamos la configuración idónea de Celery en nuestro caso.
 #+END_NOTES
-** Some Split-brains happened in RabbitMQ, leading to lot of effort debugging the situation.
+** Some Split-brains happened in RabbitMQ, leading to lot of work fixing the situation.
 # #+NAME:   fig:splitbrain
 # [[./img/splitbrain.gif]]
 #+NAME:   fig:brain
 [[./img/brain.gif]]
-*** 
+#+BEGIN_NOTES
+  * Split brain, cuando los dos servidores pierden la comunicación
+    y tienen información diferente
+  * Al entrar a depurar Celery, hay reimplementación de módulos
+    como "exec"
+#+END_NOTES
+** Workers go on strike
 #+NAME:   fig:issue
 [[./img/maraujop1.png]]
-*** 
+#+BEGIN_NOTES
+  * Bug report de Miguel
+  * Vemos como los workers dejan de ejecutar tareas.
+  * En la gráfica no se ve, pero llega un flujo
+    constante de trabajos.
+#+END_NOTES
+** 
 #+NAME:   fig:issue2
 [[./img/maraujop2.png]]
+#+BEGIN_NOTES
+  * Registramos errores de Timeouts de celery
+  * Al intentar depurar encontramos reimplementación de
+    módulos como process, etc. Complicando mucho el trabajo.
+#+END_NOTES
 
 ** Migrations to OpenERP were taking >48 hours
 #+NAME:   fig:sleepy
 [[./img/sleepy.gif]]
+#+BEGIN_NOTES
+  * Y no terminaba bien.
+#+END_NOTES
+
 
 ** The goal was to quit using Celery and RabbitMQ and use something simpler instead
 #+NAME:   fig:rainbow
 [[./img/rainbow.gif]]
+#+BEGIN_NOTES
+  * Había que cambiar la situación.
+  * No parecía que la cosa pudiera ir mucho peor.
+#+END_NOTES
 
 
 ** For more details you can ask Iñaki or Miguel
@@ -69,49 +106,91 @@
 level of service in the face of faults and challenges to normal operation."
 #+NAME:   fig:outage
 [[./img/outage.gif]]
+#+BEGIN_NOTES
+  * Resistencia en la red.
+  * Como se comporta el sistema en situacion de estres
+#+END_NOTES
+
 
 ** Possible solutions:
 *** Use an existing solution
  RQ (Redis)
 #+NAME:   fig:confused
 [[./img/confused.gif]]
+#+BEGIN_NOTES
+  * Celery no es la única opción
+  * Ninguna razón real para no haber probado RQ
+  * Posibilidad de que ocurriese lo mismo, perder mensajes.
+#+END_NOTES
+
 *** Create our own solution
 #+NAME:   fig:ourselves
 [[./img/ourselves.gif]]
 #+ATTR_REVEAL: :frag appear
- * Easier to debug
- * Choose the broker we want
- * Scratch your own itch
-
+  * Easier to debug
+  * Choose the broker we want
+  * Scratch your own itch
+#+BEGIN_NOTES
+  * Queríamos probar SQS
+  * Ningún problema para depurar
+  * Aprender en el camino
+#+END_NOTES
 
 * Crafting the solution
 ** Different delivery guarantees
 #+ATTR_REVEAL: :frag appear
  * Only-once-delivery
  * At-least-once-delivery
+#+BEGIN_NOTES
+  * Los brokers de mensajes ofrecen garantias de entrega.
+  * Exactamente una entrega, o al menos una entrega
+#+END_NOTES
+
 ** If we pick only-once-delivery...
 *** What if messages are dropped?
 # #+NAME:   fig:FAIL
 # [[./img/fail.gif]]
 #+NAME:   fig:messages_dropped
 [[./img/messages_dropped.gif]]
+#+BEGIN_NOTES
+  * Si sólo nos lo entregan una vez y se pierde, adios
+#+END_NOTES
 
 ** If we pick at-least-once-delivery...
 *** Then, what if messages are received more than once?
 #+NAME:   fig:double_fail
 [[./img/double_fail.gif]]
+#+BEGIN_NOTES
+  * Si aplicamos varias veces la misma operación,
+    el resultado puede ser diferente de lo planeado
+#+END_NOTES
+
 *** Write Idempotent Jobs
 #+NAME:   fig:Idempotence
 [[./img/idem.gif]]
+#+BEGIN_NOTES
+  * Escribiendo los trabajos de tal forma, que no
+    afecte aplicarlos 1 vez o N veces.
+  * Básicamente, si el estado está en el mensaje.
+#+END_NOTES
 
 * The success
 ** Migration to OpenERP took 6 hours
 #+NAME:   fig:yes
 [[./img/yes.gif]]
+#+BEGIN_NOTES
+  * Y esta vez, sí terminó correctamente.
+#+END_NOTES
+
 ** SQjobs workers are quite fast, and easier to debug than Celery's
 At least for us :)
 #+NAME:   fig:MELOCOTONAZO
 [[./img/melocotonazo.gif]]
+#+BEGIN_NOTES
+  * La infraestructura es muy simple,
+    añade muy poco overhead.
+#+END_NOTES
+
 
 * The Job
 ** Must be in ~jobs.py~
@@ -155,10 +234,19 @@ $this->_sqs = new AmazonSQS($amazon_config['aws_key'], $amazon_config['aws_secre
 $result = $this->_sqs->send_message($this->_queue_urls[$queue_name], base64_encode($json_payload));
 #+END_SRC
 
+* The Worker
+** Workers listen in a queue and execute jobs
+** Built as a django command
+** You can launch as many as you want
+** Usage:
+#+BEGIN_SRC bash
+$ ./manage.py sqjobs worker $queue_name
+#+END_SRC
+
 * Eager mode
 ** Eager mode is a simpler execution mode
 ** Tasks are run synchronously
-** By the broker itself
+** Instead of sending them to the message broker
 ** So there is no need for a queue nor running workers.
 ** Meant for development and unit testing.
 ** Sample execution
@@ -171,15 +259,6 @@ $result = $this->_sqs->send_message($this->_queue_urls[$queue_name], base64_enco
 ('fdb005d3-276f-4f75-8e8e-c8fcde67043c', AdderJob())
 >>> job_added[1].result
 6
-#+END_SRC
-
-* The Worker
-** Workers listen in a queue and execute jobs
-** Built as a django command
-** You can launch as many as you want
-** Usage:
-#+BEGIN_SRC bash
-$ ./manage.py sqjobs worker $queue_name
 #+END_SRC
 
 * A Result-backed Job
@@ -197,6 +276,7 @@ class DummyResultJob(ResultJob):
     def run(self, *args, **kwargs):
         pass
 #+END_SRC
+
 ** How to use a resultjob
 #+BEGIN_SRC python
 >>> from sqjobs.contrib.django.djsqjobs.models import JobStatus
