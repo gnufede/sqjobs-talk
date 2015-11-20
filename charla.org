@@ -51,7 +51,7 @@
   * Dos servidores funcionan como uno, pero más tolerante a fallos.
   * Posiblemente no usábamos la configuración idónea de Celery en nuestro caso.
 #+END_NOTES
-** Some Split-brains happened in RabbitMQ, leading to lot of work fixing the situation.
+** Some Split-brains happened in RabbitMQ, leading to a lot of work to fix the situation.
 # #+NAME:   fig:splitbrain
 # [[./img/splitbrain.gif]]
 #+NAME:   fig:brain
