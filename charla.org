@@ -380,3 +380,6 @@ class LoggerJob(Job):
     def run(self, *args, **kwargs):
         raise NotImplementedError
 #+END_SRC
+
+* Thanks
+ ~@gnufede~
