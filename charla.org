@@ -3,8 +3,8 @@
 #+EMAIL: federico.mon@ticketea.com
 #+DATE: 2015-11-21
 #+OPTIONS: num:nil toc:nil todo:nil
-#+REVEAL_ROOT: ./reveal.js/
-# #+REVEAL_ROOT: https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/
+# #+REVEAL_ROOT: ./reveal.js/
+#+REVEAL_ROOT: https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/
 #+REVEAL_EXTRA_CSS: ./custom.css
 #+REVEAL_SLIDE_NUMBER: nil
 #+REVEAL_THEME: league
